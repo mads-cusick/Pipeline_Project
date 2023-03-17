@@ -70,16 +70,16 @@ os.system('spades.py -k 77,99,127 -t 2 --only-assembler '+
           '--pe-1 1 SRR5660030_mapped_1.fq.gz --pe-2 1 SRR5660030_mapped_2.fq.gz '+
           '--pe-1 2 SRR5660033_mapped_1.fq.gz --pe-2 2 SRR5660033_mapped_2.fq.gz '+
           '--pe-1 3 SRR5660044_mapped_1.fq.gz --pe-2 3 SRR5660044_mapped_2.fq.gz '+
-          '--pe-1 4 SRR5660045_mapped_1.fq.gz --pe-2 4 SRR5660045_mapped_2.fq.gz '+
-          '-o SRR56600_assembly/')
+          '--pe-1 4 SRR5660045_mapped_1.fq.gz --pe-2 4 SRR5660045_mapped_2.fq.gz '+
+          '-o SRR56600_assembly/')
 
 # write SPAdes command to log file
 log.write('spades.py -k 77,99,127 -t 2 --only-assembler '+
           '--pe-1 1 SRR5660030_mapped_1.fq.gz --pe-2 1 SRR5660030_mapped_2.fq.gz '+
           '--pe-1 2 SRR5660033_mapped_1.fq.gz --pe-2 2 SRR5660033_mapped_2.fq.gz '+
           '--pe-1 3 SRR5660044_mapped_1.fq.gz --pe-2 3 SRR5660044_mapped_2.fq.gz '+
-          '--pe-1 4 SRR5660045_mapped_1.fq.gz --pe-2 4 SRR5660045_mapped_2.fq.gz '+
-          '-o SRR56600_assembly/\n')
+          '--pe-1 4 SRR5660045_mapped_1.fq.gz --pe-2 4 SRR5660045_mapped_2.fq.gz '+
+          '-o SRR56600_assembly/\n')
 log.write('\n')
 
 
