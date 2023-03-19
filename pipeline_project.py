@@ -21,6 +21,7 @@ log = open('PipelineProject.log', 'w')
 sample_srr = ['SRR5660030', 'SRR5660033', 'SRR5660044', 'SRR5660045']
 sample_id = ['Donor 1 (2dpi)', 'Donor 1 (6dpi)', 'Donor 3 (2dpi)', 'Donor 3 (6dpi)']
 
+
 # retrieve the transcriptomes from the two patient donors from SRA using wget
 for sample in sample_srr:
     os.system('wget https://sra-pub-run-odp.s3.amazonaws.com/sra/'+sample+'/'+sample)
@@ -34,7 +35,10 @@ for sample in sample_srr:
 # make a small subset (10000 reads) from the paired-end fastq files
 for sample in sample_srr:
     for i in range(1,3):
-        os.system('head -10000 '+sample+'_'+i+'.fastq > test_'+sample+'_'+i+'.fastq')
+        os.system('head -40000 '+sample+'_'+str(i)+'.fastq > test_'+sample+'_'+str(i)+'.fastq')
+
+# make a list of sample SRR names from two patient donors for the testing data
+test_srr = ['test_SRR5660030', 'test_SRR5660033', 'test_SRR5660044', 'test_SRR5660045']
 
 
 
@@ -51,26 +55,41 @@ SeqIO.write(seq_record_iterator, "NC_006273.2_genome.fasta", "fasta")
 os.system('bowtie2-build NC_006273.2_genome.fasta HCMV')
 
 # map to index with Bowtie2 for each of the paired-end reads
-for sample in sample_srr:
+for sample in test_srr:
     os.system('bowtie2 -x HCMV -1 '+sample+'_1.fastq -2 '+sample+'_2.fastq -S HCMVmap_'+sample+'_.sam --al-conc-gz '+sample+'_mapped_%.fq.gz')
 
+
 # write to log file the number of reads in each transcriptome before and after the Bowtie2 mapping
-for i in range(len(sample_srr)):
-    # count the lines of the before and after fastq files and divide by 4 to get the number of reads
-    before = os.system('wc '+sample_srr[i]+'_1.fastq') / 4
-    after = os.system('wc '+sample_srr[i]+'_mapped_1.fq.gz') / 4
-    # write to log file
-    log.write(sample_id[i]+' had '+str(before)+' read pairs before Bowtie2 filtering and '+str(after)+' read pairs after.\n')
+# create a file to store the number of reads before and after filtering for each sample on separate lines
+os.system('touch num_reads.txt')
+for i in range(len(test_srr)):
+    # count the lines of the before and after fastq files and divide by 4 to get the number of reads, append to file
+    os.system('expr $(cat '+test_srr[i]+'_1.fastq| wc -l) / 4 >> num_reads.txt')
+    os.system('expr $(cat '+test_srr[i]+'_mapped_1.fq.gz | wc -l) / 4  >> num_reads.txt')
+
+# open the file with the read counts and store in a list
+with open('num_reads.txt', 'r') as file:
+    file_contents = file.read()
+    num_reads = file_contents.split()
+
+# iterate through list of read counts and write each to log file
+for i in range(len(sample_id)):
+    j = i*2
+    log.write(sample_id[i]+' had '+str(num_reads[j])+' read pairs before Bowtie2 filtering and '
+              +str(num_reads[j+1])+' read pairs after.\n')
 log.write('\n')
+
+# remove the text file storing the read counts
+os.system('rm num_reads.txt')
 
 
 
 # assemble all 4 transcriptomes together to produce 1 assembly via SPAdes
 os.system('spades.py -k 77,99,127 -t 2 --only-assembler '+
-          '--pe-1 1 SRR5660030_mapped_1.fq.gz --pe-2 1 SRR5660030_mapped_2.fq.gz '+
-          '--pe-1 2 SRR5660033_mapped_1.fq.gz --pe-2 2 SRR5660033_mapped_2.fq.gz '+
-          '--pe-1 3 SRR5660044_mapped_1.fq.gz --pe-2 3 SRR5660044_mapped_2.fq.gz '+
-          '--pe-1 4 SRR5660045_mapped_1.fq.gz --pe-2 4 SRR5660045_mapped_2.fq.gz '+
+          '--pe-1 1 test_SRR5660030_mapped_1.fq.gz --pe-2 1 test_SRR5660030_mapped_2.fq.gz '+
+          '--pe-1 2 test_SRR5660033_mapped_1.fq.gz --pe-2 2 test_SRR5660033_mapped_2.fq.gz '+
+          '--pe-1 3 test_SRR5660044_mapped_1.fq.gz --pe-2 3 test_SRR5660044_mapped_2.fq.gz '+
+          '--pe-1 4 test_SRR5660045_mapped_1.fq.gz --pe-2 4 test_SRR5660045_mapped_2.fq.gz '+
           '-o SRR56600_assembly/')
 
 # write SPAdes command to log file
@@ -163,7 +182,6 @@ with open('betaherpesvirinae_blastn_results.csv', 'r') as file:
 
 # close the log file
 log.close()
-
 
 
 
